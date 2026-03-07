@@ -6,6 +6,7 @@ import io.github.renhaowan.multilogin.core.properties.config.LoginMethodConfig;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,16 +14,40 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 多方式登录配置属性类
+ * 
+ * <p>用于配置 Spring Security 多方式登录功能，支持多种登录方式（如手机号、邮箱、用户名等）
+ * 和多种客户端类型（如用户端、管理端等）的灵活组合。</p>
+ * 
+ * <p>配置前缀：multi-login</p>
+ * 
  * @author wan
- * 主配置类
+ * @since 0.0.1
  */
 @ConfigurationProperties(prefix = "multi-login")
 @Data
 public class MultiLoginProperties {
+    /**
+     * 是否启用多方式登录 Starter 的自动配置
+     * 
+     * <p>默认值：false</p>
+     */
     private boolean enabled = false;
+    
+    /**
+     * 全局配置
+     * 
+     * <p>包含所有登录方式共享的全局设置</p>
+     */
+    @NestedConfigurationProperty
     private GlobalConfig global = new GlobalConfig();
 
-    // key 表示登录的名称/策略
+    /**
+     * 登录方式配置映射
+     * 
+     * <p>key 表示登录方式的名称/策略（如 phone、email、username 等）</p>
+     * <p>value 表示该登录方式的详细配置</p>
+     */
     private Map<String, LoginMethodConfig> methods = new HashMap<>();
 
     // 如果配置了 processUrl 则直接使用；如果未配置但有 name，则用 "/login/" + key 生成
