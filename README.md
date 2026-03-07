@@ -6,11 +6,19 @@
 
 `multi-login-spring-security-starter` 是一个**配置驱动**的 Spring Security 扩展包。它旨在解决原生 Security 处理 **多方式登录**（如手机验证码、邮箱密码）和 **多客户端认证**（如 C端用户、B端员工）时代码冗余的问题。
 
+## 🚀 新特性：自动配置支持
+
+从 v0.0.6 开始，我们引入了全新的自动配置机制，提供更简洁的使用方式：
+
+- **零代码配置**：只需设置 `multi-login.enabled=true`，无需手动配置 `SecurityFilterChain`
+- **DSL 风格配置**：一行代码 `.with(multiLoginCustomizer, customizer -> {})` 即可启用多登录
+- **IDE 智能提示**：支持 Spring Boot Configuration Processor，提供完整的配置提示
+
+📖 **查看详细使用指南**：[点击查看自动配置指南](docs/upgrade/AUTO_CONFIGURATION_GUIDE.md)
+
 ---
 
 ## 1. 快速入门 (Quick Start)
-
-最基础的使用场景：**默认 Form 表单提交 + 单一客户端**。
 
 ### 1.1 引入依赖
 
@@ -18,27 +26,86 @@
 <dependency>
     <groupId>io.github.renhao-wan</groupId>
     <artifactId>multi-login-spring-security-starter</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
 </dependency>
 ```
 
-### 1.2 最小化配置
+### 1.2 方式一：自动配置（推荐，简单场景）
+
+如果你的项目没有复杂的 Security 配置需求，可以使用自动配置方式：
+
+```yaml
+multi-login:
+  enabled: true  # 启用自动配置
+  methods:
+    phone:
+      process-url: /login/phone
+      principal-param-name:
+        - phone
+      credential-param-name:
+        - code
+      provider-bean-name:
+        - phoneLoginService
+```
+
+**无需创建 `SecurityFilterChain` Bean**，系统会自动创建默认配置。
+
+### 1.3 方式二：手动配置（推荐，复杂场景）
+
+如果你需要自定义 Security 配置，使用 DSL 风格配置：
 
 ```yaml
 multi-login:
   enabled: true
   methods:
     phone:
-      process-url: /login/phone      # 登录接口
-      principal-param-name: phone    # 账号参数名
-      credential-param-name: captcha # 密码/验证码参数名
-      provider-bean-name: phoneLoginService # 业务逻辑 Bean 名称
+      process-url: /login/phone
+      principal-param-name:
+        - phone
+      credential-param-name:
+        - code
+      provider-bean-name:
+        - phoneLoginService
 ```
 
-### 1.3 核心代码集成
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            MultiLoginSecurityCustomizer multiLoginCustomizer) throws Exception {
+        return http
+                // 一行代码启用多登录功能
+                .with(multiLoginCustomizer, customizer -> {})
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().authenticated()
+                )
+                .build();
+    }
+}
+```
 
-**第一步：实现认证逻辑**
-只需实现 `BusinessAuthenticationLogic` 接口，无需关心 Security 复杂的 Filter 链。
+### 1.4 方式三：兼容旧版本（不推荐）
+
+```java
+@Configuration
+public class SecurityConfig {
+    @Resource
+    private MultiLoginSecurity multiLoginSecurity;
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        multiLoginSecurity.initializeMultiLoginFilters(http);
+        return http.build();
+    }
+}
+```
+
+### 1.5 实现认证逻辑
+
+只需实现 `BusinessAuthenticationLogic` 接口：
 
 ```java
 @Service("phoneLoginService")
@@ -55,23 +122,6 @@ public class PhoneLoginService implements BusinessAuthenticationLogic {
         
         // 成功返回 UserDetails
         return new User(phone, "", AuthorityUtils.createAuthorityList("ROLE_USER"));
-    }
-}
-```
-
-**第二步：配置 Security 链**
-
-```java
-@Configuration
-public class SecurityConfig {
-    @Resource
-    private MultiLoginSecurity multiLoginSecurity; // 注入核心组件
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // 关键一行：自动装配所有登录方式的 Filter
-        multiLoginSecurity.initializeMultiLoginFilters(http);
-        return http.build();
     }
 }
 ```
@@ -246,6 +296,55 @@ public class UrlClientTypeExtractor implements ClientTypeExtractor {
 | **Method** | `provider-bean-name`              | 业务逻辑 Bean (支持列表) | **必填**                  |
 | **Method** | `parameter-extractor-bean-name`   | **覆盖**全局参数提取器   | 继承 Global               |
 | **Method** | `client-type-extractor-bean-name` | **覆盖**全局客户端提取器 | 继承 Global               |
+
+---
+
+## 6. IDE 智能提示支持
+
+本项目已配置 Spring Boot Configuration Processor，为 IDE 提供完整的配置智能提示：
+
+### 6.1 支持的功能
+
+- **代码自动补全**：在 `application.yml` 或 `application.properties` 中输入 `multi-login.` 时，IDE 会自动显示所有可用的配置项
+- **文档提示**：鼠标悬停在配置项上会显示详细的 Javadoc 描述
+- **类型检查**：IDE 会检查配置项的类型是否正确
+- **默认值提示**：显示每个配置项的默认值
+
+### 6.2 支持的 IDE
+
+- **IntelliJ IDEA**：原生支持，无需额外配置
+- **VS Code**：安装 Spring Boot Extension Pack 后支持
+- **Eclipse**：安装 Spring Tools 插件后支持
+
+### 6.3 配置示例
+
+```yaml
+multi-login:
+  enabled: true
+  global:
+    request-client-header: X-Client-Type
+    client-types:
+      - CUSTOMER
+      - EMPLOYEE
+    handler:
+      success: mySuccessHandler
+      failure: myFailureHandler
+    parameter-extractor-bean-name: jsonParameterExtractor
+    client-type-extractor-bean-name: headerClientTypeExtractor
+  methods:
+    phone:
+      process-url: /login/phone
+      http-method: POST
+      principal-param-name:
+        - phone
+      credential-param-name:
+        - code
+      provider-bean-name:
+        - customerPhoneProvider
+        - employeePhoneProvider
+```
+
+📖 **了解更多配置元数据信息**：[点击查看配置元数据说明](docs/upgrade/CONFIGURATION_METADATA.md)
 
 
 
