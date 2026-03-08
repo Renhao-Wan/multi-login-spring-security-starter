@@ -42,7 +42,7 @@ graph TD
     I -->|是| K[用户自定义 SecurityFilterChain]
     
     J --> L[应用多登录配置]
-    K --> M[通过 .with(multiLoginCustomizer) 启用]
+    K --> M[通过 .with（multiLoginCustomizer）启用]
     
     G --> N[过滤器列表注入 Security 链]
 ```
