@@ -2,7 +2,21 @@
 
 ![](https://img.shields.io/maven-central/v/io.github.renhao-wan/multi-login-spring-security-starter) [![Java CI with Maven](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/maven.yml) ![Java](https://img.shields.io/badge/Java-17+-blue.svg) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-📖 **深入了解架构原理**：[点击查看架构设计文档](docs/DESIGN_DOC.md)
+## 📚 文档导航
+
+### 架构设计
+- [架构设计文档](docs/architecture/DESIGN_DOC.md) - 系统架构、设计原理、核心组件说明
+- [核心架构映射](docs/architecture/CORE_ARCHITECTURE_MAPPING.md) - 核心组件映射关系说明
+
+### 配置指南
+- [配置指南](docs/configuration/CONFIGURATION_GUIDE.md) - 完整配置说明、使用示例、最佳实践
+
+### 使用指南
+- [使用指南索引](docs/guides/INDEX.md) - 文档分类和快速导航
+
+### 升级与迁移
+- [自动配置指南](docs/upgrade/AUTO_CONFIGURATION_GUIDE.md) - 自动配置使用指南
+- [配置元数据](docs/upgrade/CONFIGURATION_METADATA.md) - IDE 智能提示配置说明
 
 `multi-login-spring-security-starter` 是一个**配置驱动**的 Spring Security 扩展包。它旨在解决原生 Security 处理 **多方式登录**（如手机验证码、邮箱密码）和 **多客户端认证**（如 C端用户、B端员工）时代码冗余的问题。
 
@@ -14,7 +28,7 @@
 - **DSL 风格配置**：一行代码 `.with(multiLoginCustomizer, customizer -> {})` 即可启用多登录
 - **IDE 智能提示**：支持 Spring Boot Configuration Processor，提供完整的配置提示
 
-📖 **查看详细使用指南**：[点击查看自动配置指南](docs/upgrade/AUTO_CONFIGURATION_GUIDE.md)
+📖 **查看详细使用指南**：[点击查看配置指南](docs/configuration/CONFIGURATION_GUIDE.md)
 
 ---
 
@@ -348,3 +362,50 @@ multi-login:
 
 
 
+
+---
+
+## 📁 文档结构说明
+
+项目的文档已经重新组织，按照功能和使用场景进行了分类：
+
+```
+docs/
+├── architecture/              # 架构设计文档
+│   ├── DESIGN_DOC.md         # 系统架构、设计原理、核心组件说明
+│   └── CORE_ARCHITECTURE_MAPPING.md  # 核心组件映射关系说明
+├── configuration/            # 配置文档
+│   └── CONFIGURATION_GUIDE.md # 完整配置说明、使用示例、最佳实践
+├── guides/                   # 使用指南
+│   └── INDEX.md             # 文档分类和快速导航
+└── upgrade/                  # 升级与迁移文档（保持不变）
+    ├── AUTO_CONFIGURATION_GUIDE.md
+    └── CONFIGURATION_METADATA.md
+```
+
+### 文档使用建议
+
+1. **新用户**：从 [配置指南](docs/configuration/CONFIGURATION_GUIDE.md) 开始，了解基本配置和使用方法
+2. **架构师/开发者**：阅读 [架构设计文档](docs/architecture/DESIGN_DOC.md) 理解设计原理
+3. **问题排查**：参考 [使用指南索引](docs/guides/INDEX.md) 快速找到相关文档
+4. **版本升级**：查看 [升级指南](docs/upgrade/AUTO_CONFIGURATION_GUIDE.md) 了解新特性
+
+### 核心架构映射
+
+项目采用 **1:1:多** 的映射模型：
+- **一个** `LoginMethodConfig` → **一个** `DynamicAuthenticationFilter`
+- **一个** `DynamicAuthenticationFilter` → **一个** `RouterAuthenticationProvider`  
+- **一个** `RouterAuthenticationProvider` → **多个** `BusinessAuthenticationLogic`
+
+详细说明请参考 [核心架构映射](docs/architecture/CORE_ARCHITECTURE_MAPPING.md)。
+
+---
+
+## 🎯 设计目标
+
+- **简化配置**：通过配置驱动，减少代码量
+- **灵活扩展**：所有核心组件均可自定义替换
+- **清晰架构**：明确的层次分离和职责划分
+- **企业级可靠**：基于 Spring Security 标准架构，稳定可靠
+
+无论你是构建简单的单体应用还是复杂的微服务架构，这个 Starter 都能提供优雅的多登录解决方案。
