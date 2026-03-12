@@ -2,12 +2,15 @@ package io.github.renhaowan.multilogin.core.service.extractor.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.renhaowan.multilogin.core.i18n.CoreMessageCodes;
+import io.github.renhaowan.multilogin.core.i18n.MessageSourceHelper;
 import io.github.renhaowan.multilogin.core.service.extractor.AbstractInlineParameterExtractor;
 import io.github.renhaowan.multilogin.core.service.extractor.ParameterExtractor;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -30,54 +33,56 @@ import java.util.Set;
  */
 @Slf4j
 @Setter
+@RequiredArgsConstructor
 public class JsonParameterExtractor extends AbstractInlineParameterExtractor implements ParameterExtractor {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    private final MessageSourceHelper messageSourceHelper;
 
     /**
      * 从请求中提取所有参数
      *
      * @param request HTTP 请求对象
+     * @param paramNames 需要提取的参数名集合
      * @return 参数键值对 Map
      */
     @Override
     protected Map<String, Object> doExtractParameters(HttpServletRequest request, Set<String> paramNames) {
-        // 校验 Content-Type
         if (!isJsonRequest(request)) {
-            // 这里选择返回空，意味着没有提取到参数
-            log.warn("Content-Type is not application/json");
+            final String warningMsg = messageSourceHelper.getMessage(
+                CoreMessageCodes.WARN_CONTENT_TYPE_NOT_JSON,
+                request.getContentType()
+            );
+            log.warn(warningMsg);
             return Collections.emptyMap();
         }
 
-        // 包装请求体，解决输入流只能读取一次的问题
-        CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(request);
-
-        Map<String, Object> params = new HashMap<>();
+        final CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(request);
+        final Map<String, Object> params = new HashMap<>();
+        
         try {
-            // 读取缓存的请求体，指定泛型保证类型安全
-            Map<String, Object> jsonBody = objectMapper.readValue(
+            final Map<String, Object> jsonBody = objectMapper.readValue(
                     cachedRequest.getInputStream(),
                     new TypeReference<>() {}
             );
 
-            // 提取指定参数（jsonBody为空Map时直接跳过）
             for (String paramName : paramNames) {
                 if (jsonBody.containsKey(paramName)) {
-                    Object value = jsonBody.get(paramName);
+                    final Object value = jsonBody.get(paramName);
                     if (value != null) {
                         params.put(paramName, value);
                     }
                 }
             }
         } catch (Exception e) {
-            // 容错处理：JSON解析失败时，尝试从请求参数中提取（降级逻辑）
             for (String paramName : paramNames) {
-                String value = cachedRequest.getParameter(paramName);
+                final String value = cachedRequest.getParameter(paramName);
                 if (value != null) {
                     params.put(paramName, value);
                 }
             }
-            log.warn("Failed to parse JSON request body, fallback to query parameters", e);
+            final String warningMsg = messageSourceHelper.getMessage(CoreMessageCodes.WARN_FALLBACK_QUERY_PARAMS);
+            log.warn(warningMsg, e);
         }
 
         return params;

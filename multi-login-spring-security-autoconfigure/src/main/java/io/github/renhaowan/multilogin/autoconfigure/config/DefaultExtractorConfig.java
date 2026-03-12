@@ -1,10 +1,13 @@
 package io.github.renhaowan.multilogin.autoconfigure.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.renhaowan.multilogin.core.i18n.MessageSourceHelper;
 import io.github.renhaowan.multilogin.core.service.extractor.ClientTypeExtractor;
 import io.github.renhaowan.multilogin.core.service.extractor.ParameterExtractor;
 import io.github.renhaowan.multilogin.core.service.extractor.impl.FormParameterExtractor;
 import io.github.renhaowan.multilogin.core.service.extractor.impl.HeaderClientTypeExtractor;
 import io.github.renhaowan.multilogin.core.service.extractor.impl.JsonParameterExtractor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -12,7 +15,11 @@ import org.springframework.context.annotation.Bean;
  *
  * @author wan
  */
+@RequiredArgsConstructor
 public class DefaultExtractorConfig {
+
+    private final MessageSourceHelper messageSourceHelper;
+    private final ObjectMapper objectMapper;
 
     /**
      * 默认参数提取器
@@ -31,7 +38,7 @@ public class DefaultExtractorConfig {
      */
     @Bean("jsonParameterExtractor")
     public ParameterExtractor jsonParameterExtractor() {
-        return new JsonParameterExtractor();
+        return new JsonParameterExtractor(objectMapper, messageSourceHelper);
     }
 
     /**
@@ -41,6 +48,6 @@ public class DefaultExtractorConfig {
      */
     @Bean("headerClientTypeExtractor")
     public ClientTypeExtractor clientTypeExtractor() {
-        return new HeaderClientTypeExtractor();
+        return new HeaderClientTypeExtractor(messageSourceHelper);
     }
 }

@@ -1,7 +1,10 @@
 package io.github.renhaowan.multilogin.core;
 
 import io.github.renhaowan.multilogin.core.exception.MultiLoginException;
+import io.github.renhaowan.multilogin.core.i18n.CoreMessageCodes;
+import io.github.renhaowan.multilogin.core.i18n.MessageSourceHelper;
 import io.github.renhaowan.multilogin.core.service.BusinessAuthenticationLogic;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -11,15 +14,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 路由认证提供者
+ * 
+ * <p>根据客户端类型路由到对应的业务认证逻辑</p>
+ * 
  * @author wan
  */
+@Slf4j
 public class RouterAuthenticationProvider implements AuthenticationProvider {
-    // Map<ClientType, BusinessAuthenticationLogic>
+    
     private final Map<String, BusinessAuthenticationLogic> businessProviders;
+    private final MessageSourceHelper messageSourceHelper;
 
-    public RouterAuthenticationProvider(List<BusinessAuthenticationLogic> providers, List<String> clientTypes) {
+    public RouterAuthenticationProvider(List<BusinessAuthenticationLogic> providers, 
+                                       List<String> clientTypes,
+                                       MessageSourceHelper messageSourceHelper) {
         this.businessProviders = new HashMap<>();
-        // 建立 ClientType -> BusinessLogic 的映射关系
+        this.messageSourceHelper = messageSourceHelper;
         for (int i = 0; i < clientTypes.size(); i++) {
             this.businessProviders.put(clientTypes.get(i), providers.get(i));
         }
@@ -27,34 +38,46 @@ public class RouterAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        // 类型检查
         if (!(authentication instanceof BaseMultiLoginToken token)) {
             return null;
         }
 
-        // 路由：根据客户端类型查找对应的业务 Provider
-        String clientType = token.getClientType();
-        BusinessAuthenticationLogic businessLogic = businessProviders.get(clientType);
+        final String clientType = token.getClientType();
+        final BusinessAuthenticationLogic businessLogic = businessProviders.get(clientType);
 
         if (businessLogic == null) {
-            throw new MultiLoginException("Login method provider not configured for client type: " + clientType);
+            final String errorMsg = messageSourceHelper.getMessage(
+                CoreMessageCodes.ERROR_BUSINESS_LOGIC_NOT_FOUND,
+                clientType
+            );
+            log.error(errorMsg);
+            throw new MultiLoginException(
+                CoreMessageCodes.ERROR_CLIENT_TYPE_UNKNOWN,
+                clientType
+            );
         }
 
-        // 执行业务逻辑
-        Object principal = businessLogic.authenticate(token.getAllParams());
+        final Object principal = businessLogic.authenticate(token.getAllParams());
 
         if (principal == null) {
-            throw new MultiLoginException("Authentication failed: User details is null.");
+            final String errorMsg = messageSourceHelper.getMessage(CoreMessageCodes.ERROR_PRINCIPAL_IS_NULL);
+            log.error(errorMsg);
+            throw new MultiLoginException(CoreMessageCodes.ERROR_AUTHENTICATION_FAILED);
         }
 
-        // 认证成功，设置已认证状态并返回
         token.setPrincipalDetails(principal);
+        if (log.isDebugEnabled()) {
+            final String debugMsg = messageSourceHelper.getMessage(
+                CoreMessageCodes.DEBUG_AUTHENTICATION_SUCCESS,
+                clientType
+            );
+            log.debug(debugMsg);
+        }
         return token;
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
-        // 开发者无需实现，Starter 确保只处理自己的 Token
         return BaseMultiLoginToken.class.isAssignableFrom(authentication);
     }
 }

@@ -1,2 +1,3 @@
+io.github.renhaowan.multilogin.autoconfigure.i18n.I18nAutoConfiguration
 io.github.renhaowan.multilogin.autoconfigure.MultiLoginAutoConfiguration
 io.github.renhaowan.multilogin.autoconfigure.MultiLoginSecurityAutoConfiguration

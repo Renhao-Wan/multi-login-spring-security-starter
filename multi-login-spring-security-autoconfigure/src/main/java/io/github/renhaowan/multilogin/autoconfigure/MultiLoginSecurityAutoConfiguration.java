@@ -2,6 +2,9 @@ package io.github.renhaowan.multilogin.autoconfigure;
 
 import io.github.renhaowan.multilogin.autoconfigure.config.MultiLoginSecurity;
 import io.github.renhaowan.multilogin.autoconfigure.config.MultiLoginSecurityCustomizer;
+import io.github.renhaowan.multilogin.autoconfigure.i18n.AutoConfigureMessageCodes;
+import io.github.renhaowan.multilogin.core.i18n.MessageSourceHelper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -46,7 +49,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Slf4j
 @AutoConfiguration
 @Import(MultiLoginSecurity.class)
+@RequiredArgsConstructor
 public class MultiLoginSecurityAutoConfiguration {
+    
+    private final MessageSourceHelper messageSourceHelper;
 
     /**
      * 创建 MultiLoginSecurityCustomizer Bean
@@ -60,7 +66,7 @@ public class MultiLoginSecurityAutoConfiguration {
     @Bean
     public MultiLoginSecurityCustomizer multiLoginSecurityCustomizer(
             ApplicationContext applicationContext) {
-        return new MultiLoginSecurityCustomizer(applicationContext);
+        return new MultiLoginSecurityCustomizer(applicationContext, messageSourceHelper);
     }
 
     /**
@@ -86,7 +92,10 @@ public class MultiLoginSecurityAutoConfiguration {
     public SecurityFilterChain defaultMultiLoginSecurityFilterChain(
             HttpSecurity http,
             MultiLoginSecurityCustomizer multiLoginSecurityCustomizer) throws Exception {
-        log.info("未检测到用户自定义的 SecurityFilterChain，正在创建默认的 Multi-Login SecurityFilterChain");
+        final String infoMsg = messageSourceHelper.getMessage(
+            AutoConfigureMessageCodes.INFO_CREATING_DEFAULT_SECURITY_FILTER_CHAIN
+        );
+        log.info(infoMsg);
         
         return http
                 .with(multiLoginSecurityCustomizer, Customizer.withDefaults())

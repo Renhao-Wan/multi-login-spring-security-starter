@@ -6,6 +6,7 @@ import io.github.renhaowan.multilogin.core.service.extractor.ParameterExtractor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -15,8 +16,13 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import java.util.Map;
 
 /**
+ * 动态认证过滤器
+ * 
+ * <p>根据配置动态拦截登录请求，提取参数并委托给认证管理器处理</p>
+ * 
  * @author wan
  */
+@Slf4j
 public class DynamicAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
     private final LoginMethodConfig config;
     private final ParameterExtractor parameterExtractor;

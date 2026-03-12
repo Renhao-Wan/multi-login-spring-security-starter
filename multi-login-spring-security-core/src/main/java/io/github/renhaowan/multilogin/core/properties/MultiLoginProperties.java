@@ -1,10 +1,14 @@
 package io.github.renhaowan.multilogin.core.properties;
 
 import io.github.renhaowan.multilogin.core.exception.MultiLoginException;
+import io.github.renhaowan.multilogin.core.i18n.CoreMessageCodes;
+import io.github.renhaowan.multilogin.core.i18n.MessageSourceHelper;
 import io.github.renhaowan.multilogin.core.properties.config.GlobalConfig;
 import io.github.renhaowan.multilogin.core.properties.config.LoginMethodConfig;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
@@ -24,9 +28,11 @@ import java.util.Map;
  * @author wan
  * @since 0.0.1
  */
+@Slf4j
 @ConfigurationProperties(prefix = "multi-login")
 @Data
 public class MultiLoginProperties {
+    
     /**
      * 是否启用多方式登录 Starter 的自动配置
      * 
@@ -49,59 +55,74 @@ public class MultiLoginProperties {
      * <p>value 表示该登录方式的详细配置</p>
      */
     private Map<String, LoginMethodConfig> methods = new HashMap<>();
+    
+    /**
+     * 消息源助手（用于国际化）
+     */
+    @Setter
+    private MessageSourceHelper messageSourceHelper;
 
-    // 如果配置了 processUrl 则直接使用；如果未配置但有 name，则用 "/login/" + key 生成
     @PostConstruct
     public void determineProcessUrl() {
         for (Map.Entry<String, LoginMethodConfig> method : methods.entrySet()) {
-            String key = method.getKey();
-            String processUrl = method.getValue().getProcessUrl();
-            // 若processUrl未配置（为空），动态生成
+            final String key = method.getKey();
+            final String processUrl = method.getValue().getProcessUrl();
             if (processUrl == null || processUrl.trim().isEmpty()) {
-                method.getValue().setProcessUrl("/login/" + key);
+                final String generatedUrl = "/login/" + key;
+                method.getValue().setProcessUrl(generatedUrl);
+                if (log.isDebugEnabled() && messageSourceHelper != null) {
+                    final String debugMsg = messageSourceHelper.getMessage(
+                        CoreMessageCodes.DEBUG_PROCESS_URL_GENERATED,
+                        key, generatedUrl
+                    );
+                    log.debug(debugMsg);
+                }
             }
         }
     }
 
-    // 优先使用显式配置的 paramName（需包含 principalParamName + credentialParamName 所有元素）；
-    // 未配置则自动用后两者合并作为 paramName
     @PostConstruct
     public void initParamName() {
         for (Map.Entry<String, LoginMethodConfig> method : methods.entrySet()) {
-            LoginMethodConfig methodValue = method.getValue();
-            List<String> paramName = methodValue.getParamName();
-            List<String> principalParamName = methodValue.getPrincipalParamName();
-            List<String> credentialParamName = methodValue.getCredentialParamName();
-            // 未配置paramName：自动合并principal和credential的参数名（去重）
+            final LoginMethodConfig methodValue = method.getValue();
+            final List<String> paramName = methodValue.getParamName();
+            final List<String> principalParamName = methodValue.getPrincipalParamName();
+            final List<String> credentialParamName = methodValue.getCredentialParamName();
+            
             if (paramName == null || paramName.isEmpty()) {
-                List<String> mergedParams = new ArrayList<>(principalParamName);
-                // 添加credential中不存在于principal的参数（避免重复）
+                final List<String> mergedParams = new ArrayList<>(principalParamName);
                 for (String credParam : credentialParamName) {
                     if (!mergedParams.contains(credParam)) {
                         mergedParams.add(credParam);
                     }
                 }
                 methodValue.setParamName(mergedParams);
+                if (log.isDebugEnabled() && messageSourceHelper != null) {
+                    final String debugMsg = messageSourceHelper.getMessage(
+                        CoreMessageCodes.DEBUG_PARAM_NAME_MERGED,
+                        method.getKey(), mergedParams
+                    );
+                    log.debug(debugMsg);
+                }
             } else {
-                // 已配置paramName：校验是否包含principal和credential的所有参数
-                List<String> missingParams = getParams(principalParamName, paramName, credentialParamName);
-                // 缺失则抛异常提示
+                final List<String> missingParams = getParams(principalParamName, paramName, credentialParamName);
                 if (!missingParams.isEmpty()) {
-                    throw new MultiLoginException("paramName must contain all the parameters of principalParamName and credentialParamName");
+                    throw new MultiLoginException(
+                        CoreMessageCodes.ERROR_CONFIG_PARAM_NAME_MISMATCH,
+                        String.join(", ", missingParams)
+                    );
                 }
             }
         }
     }
 
     private static List<String> getParams(List<String> principalParamName, List<String> paramName, List<String> credentialParamName) {
-        List<String> missingParams = new ArrayList<>();
-        // 校验principal的参数是否都在paramName中
+        final List<String> missingParams = new ArrayList<>();
         for (String principalParam : principalParamName) {
             if (!paramName.contains(principalParam)) {
                 missingParams.add(principalParam);
             }
         }
-        // 校验credential的参数是否都在paramName中
         for (String credParam : credentialParamName) {
             if (!paramName.contains(credParam)) {
                 missingParams.add(credParam);

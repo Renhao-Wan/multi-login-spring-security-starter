@@ -1,11 +1,15 @@
 package io.github.renhaowan.multilogin.core.service.extractor.impl;
 
 import io.github.renhaowan.multilogin.core.exception.MultiLoginException;
+import io.github.renhaowan.multilogin.core.i18n.CoreMessageCodes;
+import io.github.renhaowan.multilogin.core.i18n.MessageSourceHelper;
 import io.github.renhaowan.multilogin.core.properties.config.GlobalConfig;
 import io.github.renhaowan.multilogin.core.properties.config.LoginMethodConfig;
 import io.github.renhaowan.multilogin.core.service.extractor.ClientTypeExtractor;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,8 +20,12 @@ import java.util.Optional;
  *
  * @author wan
  */
+@Slf4j
 @Setter
+@RequiredArgsConstructor
 public class HeaderClientTypeExtractor implements ClientTypeExtractor {
+
+    private final MessageSourceHelper messageSourceHelper;
 
     /**
      * 登录方法配置
@@ -37,23 +45,25 @@ public class HeaderClientTypeExtractor implements ClientTypeExtractor {
      */
     @Override
     public String extractClientType(HttpServletRequest request) {
-        // 优先使用方法级配置，否则使用全局配置
-        String requestClientHeader = Optional.ofNullable(config.getRequestClientHeader())
+        final String requestClientHeader = Optional.ofNullable(config.getRequestClientHeader())
                 .orElse(globalConfig.getRequestClientHeader());
 
-        // 客户端类型列表：优先使用方法级配置，否则使用全局配置
-        List<String> clientTypes = Optional.ofNullable(config.getClientTypes())
+        final List<String> clientTypes = Optional.ofNullable(config.getClientTypes())
                 .orElse(globalConfig.getClientTypes());
 
-        String clientType = request.getHeader(requestClientHeader);
+        final String clientType = request.getHeader(requestClientHeader);
 
-        // 如果未找到 Header 或 Header 值不在配置列表中，默认使用配置的第一个客户端类型 (支持配置的第一个客户端类型)
         if (clientType == null || !clientTypes.contains(clientType)) {
             if (!clientTypes.isEmpty()) {
-                // 默认支持配置的第一个客户端类型
-                return clientTypes.get(0);
+                final String defaultType = clientTypes.get(0);
+                final String warningMsg = messageSourceHelper.getMessage(
+                    CoreMessageCodes.WARN_CLIENT_TYPE_DEFAULT,
+                    defaultType
+                );
+                log.warn(warningMsg);
+                return defaultType;
             }
-            throw new MultiLoginException("Client type cannot be determined and no default type is configured.");
+            throw new MultiLoginException(CoreMessageCodes.ERROR_CLIENT_TYPE_NOT_DETERMINED);
         }
 
         return clientType;

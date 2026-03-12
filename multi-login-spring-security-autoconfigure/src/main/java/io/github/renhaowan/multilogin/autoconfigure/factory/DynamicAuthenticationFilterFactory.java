@@ -2,6 +2,7 @@ package io.github.renhaowan.multilogin.autoconfigure.factory;
 
 import io.github.renhaowan.multilogin.core.DynamicAuthenticationFilter;
 import io.github.renhaowan.multilogin.core.RouterAuthenticationProvider;
+import io.github.renhaowan.multilogin.core.i18n.MessageSourceHelper;
 import io.github.renhaowan.multilogin.core.properties.MultiLoginProperties;
 import io.github.renhaowan.multilogin.core.properties.config.GlobalConfig;
 import io.github.renhaowan.multilogin.core.properties.config.HandlerConfig;
@@ -32,10 +33,14 @@ public class DynamicAuthenticationFilterFactory {
 
     private final MultiLoginProperties properties;
     private final ApplicationContext applicationContext;
+    private final MessageSourceHelper messageSourceHelper;
 
-    public DynamicAuthenticationFilterFactory(MultiLoginProperties properties, ApplicationContext applicationContext) {
+    public DynamicAuthenticationFilterFactory(MultiLoginProperties properties, 
+                                             ApplicationContext applicationContext,
+                                             MessageSourceHelper messageSourceHelper) {
         this.properties = properties;
         this.applicationContext = applicationContext;
+        this.messageSourceHelper = messageSourceHelper;
     }
 
     /**
@@ -61,27 +66,25 @@ public class DynamicAuthenticationFilterFactory {
      * @return 认证过滤器
      */
     private DynamicAuthenticationFilter createFilter(LoginMethodConfig config) {
-        // 获取业务 Provider Bean
-        List<BusinessAuthenticationLogic> businessLogics = getBusinessProviders(config);
+        final List<BusinessAuthenticationLogic> businessLogics = getBusinessProviders(config);
 
-        // 路由 Provider
-        List<String> clientTypes = Optional.ofNullable(config.getClientTypes())
+        final List<String> clientTypes = Optional.ofNullable(config.getClientTypes())
                 .orElse(properties.getGlobal().getClientTypes());
-        RouterAuthenticationProvider routerProvider = new RouterAuthenticationProvider(businessLogics, clientTypes);
+        final RouterAuthenticationProvider routerProvider = new RouterAuthenticationProvider(
+            businessLogics, 
+            clientTypes, 
+            messageSourceHelper
+        );
 
-        // ProviderManager
-        ProviderManager providerManager = new ProviderManager(routerProvider);
+        final ProviderManager providerManager = new ProviderManager(routerProvider);
 
-        // 根据配置创建 Extractor
-        ParameterExtractor parameterExtractor = getParameterExtractor(config, properties.getGlobal());
-        ClientTypeExtractor clientTypeExtractor = getClientTypeExtractor(config, properties.getGlobal());
+        final ParameterExtractor parameterExtractor = getParameterExtractor(config, properties.getGlobal());
+        final ClientTypeExtractor clientTypeExtractor = getClientTypeExtractor(config, properties.getGlobal());
 
-        // Dynamic Filter
-        DynamicAuthenticationFilter filter = new DynamicAuthenticationFilter(
+        final DynamicAuthenticationFilter filter = new DynamicAuthenticationFilter(
                 config, parameterExtractor, clientTypeExtractor, providerManager
         );
 
-        // 配置 Success/Failure Handler
         configureHandlers(config, filter);
 
         return filter;
