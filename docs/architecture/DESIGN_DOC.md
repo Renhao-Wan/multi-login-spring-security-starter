@@ -268,5 +268,4 @@ sequenceDiagram
 
 - [配置文档](../configuration/CONFIGURATION_GUIDE.md) - 详细配置说明和使用示例
 - [核心架构映射](../architecture/CORE_ARCHITECTURE_MAPPING.md) - 核心组件映射关系说明
-- [升级指南](../upgrade/AUTO_CONFIGURATION_GUIDE.md) - 版本升级和迁移指南
-- [配置元数据](../upgrade/CONFIGURATION_METADATA.md) - IDE 智能提示配置说明
+- [变更日志](../../CHANGELOG.md) - 版本升级和变更记录

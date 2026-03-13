@@ -12,13 +12,18 @@
 <dependency>
     <groupId>io.github.renhao-wan</groupId>
     <artifactId>multi-login-spring-security-starter</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
 </dependency>
 ```
 
-### 1.2 最简配置示例
+### 1.2 自动配置（推荐，适用于简单场景）
 
-**application.yml**:
+如果你的项目没有复杂的 Security 配置需求，可以使用自动配置方式。
+
+**配置步骤**：
+
+1. 在 `application.yml` 中启用多登录功能：
+
 ```yaml
 multi-login:
   enabled: true  # 启用自动配置
@@ -41,7 +46,81 @@ multi-login:
         - emailLoginProvider
 ```
 
-**业务认证逻辑实现**:
+2. **不需要**创建 `SecurityFilterChain` Bean
+
+当 `multi-login.enabled=true` 且你没有自定义 `SecurityFilterChain` 时，系统会自动创建一个默认的 `SecurityFilterChain`，并应用多登录配置。
+
+**默认行为**：
+
+- 自动放行所有配置的登录路径（如 `/login/phone`、`/login/email`）
+- 其他所有请求都需要认证（`.anyRequest().authenticated()`）
+- 自动注入所有配置的多登录过滤器
+
+### 1.3 手动配置（推荐，适用于复杂场景）
+
+如果你需要自定义 Security 配置（如自定义授权规则、添加其他过滤器等），使用手动配置方式。
+
+**配置步骤**：
+
+1. 在 `application.yml` 中配置多登录（**也需要**设置 `enabled=true`）：
+
+```yaml
+multi-login:
+  enabled: true  # 手动配置时也需要设置此项
+  methods:
+    phone:
+      process-url: /login/phone
+      principal-param-name:
+        - phone
+      credential-param-name:
+        - code
+      provider-bean-name:
+        - phoneLoginProvider
+```
+
+2. 创建自定义的 `SecurityFilterChain` Bean，并注入 `MultiLoginSecurityCustomizer`：
+
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            MultiLoginSecurityCustomizer multiLoginCustomizer) throws Exception {
+        
+        return http
+                // 一行代码启用多登录功能
+                .with(multiLoginCustomizer, customizer -> {})
+                
+                // 自定义授权规则
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                
+                // 其他自定义配置
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                
+                .build();
+    }
+}
+```
+
+**关键点**：
+
+- 通过 `.with(multiLoginCustomizer, customizer -> {})` 一行代码即可启用多登录功能
+- `MultiLoginSecurityCustomizer` 会自动注入，无需手动创建
+- 可以在此基础上添加任何自定义的 Security 配置
+- 登录路径会自动放行，无需手动配置 `.requestMatchers("/login/**").permitAll()`
+
+### 1.4 业务认证逻辑实现
+
 ```java
 @Service("phoneLoginProvider")
 @Slf4j
@@ -79,41 +158,16 @@ public class PhoneLoginProvider implements BusinessAuthenticationLogic {
 }
 ```
 
-**自动生效**：无需任何 Security 配置代码，Starter 会自动创建完整的认证流程。
+### 1.5 配置对比
 
-### 1.3 手动配置方式（推荐用于复杂项目）
-
-```java
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-    
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            MultiLoginSecurityCustomizer multiLoginCustomizer) throws Exception {
-        
-        return http
-                // 一行代码启用多登录功能
-                .with(multiLoginCustomizer, customizer -> {})
-                
-                // 自定义授权规则
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
-                
-                // 其他自定义配置
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                
-                .build();
-    }
-}
-```
+| 特性 | 自动配置 | 手动配置 |
+|------|---------|---------|
+| 配置复杂度 | 最简单 | 简单 |
+| 灵活性 | 低 | 高 |
+| 推荐场景 | 简单项目 | 复杂项目 |
+| 是否需要 `enabled=true` | 是 | 是 |
+| 是否需要自定义 `SecurityFilterChain` | 否 | 是 |
+| 代码量 | 0 行 | 1 行 |
 
 ## 2. 配置属性全览
 
@@ -675,9 +729,101 @@ A: 检查 `provider-bean-name` 和 `client-types` 列表顺序是否一致
 3. **验证 Bean 注册**：使用 Spring Boot Actuator 的 `/beans` 端点
 4. **测试单个组件**：单独测试参数提取器、客户端识别器等组件
 
-## 10. 相关文档
+## 10. 国际化支持 (v0.0.7+)
+
+### 10.1 默认配置
+
+框架从 v0.0.7 开始默认支持国际化错误消息，无需额外配置。框架会根据请求的 `Accept-Language` 头或 `LocaleContextHolder` 自动选择合适的语言。
+
+支持的语言：
+- 简体中文（默认）
+- 英文 (en)
+- 繁体中文 (zh_TW)
+
+### 10.2 自定义消息
+
+如需自定义错误消息，在 `src/main/resources` 下创建消息文件：
+
+```properties
+# messages.properties
+multi.login.error.config.invalid=我的自定义错误消息: {0}
+multi.login.error.authentication.failed=自定义认证失败消息
+```
+
+自定义消息会覆盖框架默认消息。
+
+### 10.3 在业务逻辑中使用国际化
+
+```java
+@Service("myLoginProvider")
+@RequiredArgsConstructor
+public class MyLoginProvider implements BusinessAuthenticationLogic {
+    
+    private final MessageSourceHelper messageSourceHelper;
+    
+    @Override
+    public Object authenticate(Map<String, Object> allParams) throws AuthenticationException {
+        // 获取本地化错误消息
+        String errorMsg = messageSourceHelper.getMessage(
+            "my.custom.error.code",
+            new Object[]{"参数1", "参数2"}
+        );
+        
+        throw new BadCredentialsException(errorMsg);
+    }
+}
+```
+
+### 10.4 切换语言
+
+有两种方式切换语言：
+
+**方式一：通过请求头**
+```bash
+curl -H "Accept-Language: en" http://localhost:8080/login/phone
+```
+
+**方式二：通过代码设置**
+```java
+@RestController
+public class LoginController {
+    
+    @PostMapping("/login/custom")
+    public ResponseEntity<?> login(@RequestHeader(value = "Accept-Language", defaultValue = "zh_CN") String lang) {
+        // 设置当前请求的语言环境
+        Locale locale = Locale.forLanguageTag(lang);
+        LocaleContextHolder.setLocale(locale);
+        
+        // 执行登录逻辑...
+        return ResponseEntity.ok().build();
+    }
+}
+```
+
+### 10.5 可用的消息代码
+
+框架提供了以下消息代码常量：
+
+**Core 模块错误消息** (`CoreMessageCodes`)：
+- `ERROR_CLIENT_TYPE_UNKNOWN` - 未知的客户端类型
+- `ERROR_AUTHENTICATION_FAILED` - 认证失败
+- `ERROR_CONFIG_PARAM_NAME_MISMATCH` - 参数名配置不匹配
+- `ERROR_CLIENT_TYPE_NOT_DETERMINED` - 无法确定客户端类型
+- `ERROR_BUSINESS_LOGIC_NOT_FOUND` - 未找到业务认证逻辑
+- `ERROR_PRINCIPAL_IS_NULL` - 用户详情为空
+
+使用示例：
+```java
+import io.github.renhaowan.multilogin.core.i18n.CoreMessageCodes;
+
+String errorMsg = messageSourceHelper.getMessage(
+    CoreMessageCodes.ERROR_AUTHENTICATION_FAILED
+);
+```
+
+## 11. 相关文档
 
 - [架构设计文档](../architecture/DESIGN_DOC.md) - 系统架构和设计原理
 - [核心架构映射](../architecture/CORE_ARCHITECTURE_MAPPING.md) - 核心组件映射关系
-- [升级指南](../upgrade/AUTO_CONFIGURATION_GUIDE.md) - 版本升级和迁移指南
-- [配置元数据](../upgrade/CONFIGURATION_METADATA.md) - IDE 智能提示配置说明
+- [日志与国际化升级指南](../upgrade/LOGGING_I18N_UPGRADE_GUIDE.md) - v0.0.7 日志规范与国际化支持改造
+- [变更日志](../../CHANGELOG.md) - 完整的版本变更记录

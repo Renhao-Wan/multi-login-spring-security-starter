@@ -15,20 +15,21 @@
 - [使用指南索引](docs/guides/INDEX.md) - 文档分类和快速导航
 
 ### 升级与迁移
-- [自动配置指南](docs/upgrade/AUTO_CONFIGURATION_GUIDE.md) - 自动配置使用指南
-- [配置元数据](docs/upgrade/CONFIGURATION_METADATA.md) - IDE 智能提示配置说明
+- [日志与国际化升级指南](docs/upgrade/LOGGING_I18N_UPGRADE_GUIDE.md) - v0.0.7 日志规范与国际化支持改造
+- [变更日志](CHANGELOG.md) - 完整的版本变更记录
 
 `multi-login-spring-security-starter` 是一个**配置驱动**的 Spring Security 扩展包。它旨在解决原生 Security 处理 **多方式登录**（如手机验证码、邮箱密码）和 **多客户端认证**（如 C端用户、B端员工）时代码冗余的问题。
 
-## 🚀 新特性：自动配置支持
+## 🚀 新特性：国际化支持 (v0.0.7)
 
-从 v0.0.6 开始，我们引入了全新的自动配置机制，提供更简洁的使用方式：
+从 v0.0.7 开始，我们引入了国际化支持，提升框架的企业级适用性：
 
-- **零代码配置**：只需设置 `multi-login.enabled=true`，无需手动配置 `SecurityFilterChain`
-- **DSL 风格配置**：一行代码 `.with(multiLoginCustomizer, customizer -> {})` 即可启用多登录
-- **IDE 智能提示**：支持 Spring Boot Configuration Processor，提供完整的配置提示
+- **多语言错误消息**：支持中文、英文、繁体中文等多种语言
+- **统一日志规范**：所有核心类统一使用 `@Slf4j` 注解
+- **增强异常处理**：`MultiLoginException` 支持错误码和上下文信息
+- **向后兼容**：完全兼容 v0.0.6，无需修改现有代码
 
-📖 **查看详细使用指南**：[点击查看配置指南](docs/configuration/CONFIGURATION_GUIDE.md)
+📖 **查看详细指南**：[点击查看日志与国际化升级指南](docs/upgrade/LOGGING_I18N_UPGRADE_GUIDE.md)
 
 ---
 
@@ -40,7 +41,7 @@
 <dependency>
     <groupId>io.github.renhao-wan</groupId>
     <artifactId>multi-login-spring-security-starter</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
 </dependency>
 ```
 
@@ -66,21 +67,7 @@ multi-login:
 
 ### 1.3 方式二：手动配置（推荐，复杂场景）
 
-如果你需要自定义 Security 配置，使用 DSL 风格配置：
-
-```yaml
-multi-login:
-  enabled: true
-  methods:
-    phone:
-      process-url: /login/phone
-      principal-param-name:
-        - phone
-      credential-param-name:
-        - code
-      provider-bean-name:
-        - phoneLoginService
-```
+如果你需要自定义 Security 配置，使用 DSL 风格配置：同时保证 `multi-login.enabled=true`
 
 ```java
 @Configuration
@@ -246,122 +233,27 @@ multi-login:
 
 ---
 
-## 4. 扩展开发指南 (Developer Guide)
 
-### 4.1 自定义参数提取器 (Header 提取示例)
-
-实现 `ParameterExtractor` 接口，接管 `HttpServletRequest` 的解析逻辑。
-
-某些特殊的 API 设计中，认证信息可能不在 Body 中，而是在 Header 里（例如网关透传的参数）。
-
-```java
-@Component("headerParameterExtractor")
-public class HeaderParameterExtractor implements ParameterExtractor {
-    
-    @Override
-    public Map<String, Object> extractParameters(HttpServletRequest request) {
-        Map<String, Object> params = new HashMap<>();
-        // 假设网关已校验通过，将信息透传到 Header: X-Auth-User / X-Auth-Key
-        params.put("username", request.getHeader("X-Auth-User"));
-        params.put("secret", request.getHeader("X-Auth-Key"));
-        return params;
-    }
-}
-```
-
-### 4.2 自定义客户端识别器 (URL/JWT 示例)
-
-实现 `ClientTypeExtractor` 接口。
-
-```java
-@Component("urlClientTypeExtractor")
-public class UrlClientTypeExtractor implements ClientTypeExtractor {
-    @Override
-    public String extractClientType(HttpServletRequest request) {
-        // 从 URL 参数 ?clientType=xxx 中获取
-        String type = request.getParameter("clientType");
-        return StringUtils.hasText(type) ? type : "default";
-    }
-}
-```
-
-### 4.3 客户端路由机制说明
-
-当配置了多个 `provider-bean-name` 时，系统如何知道调用哪个 Bean？
-
-| 提取到的客户端类型 (Client Type) | 匹配逻辑                                   | 最终调用的 Bean             |
-| :------------------------------- | :----------------------------------------- | :-------------------------- |
-| `customer`                       | 查找 Bean 名称包含 `Customer` (忽略大小写) | `phoneCustomerLoginService` |
-| `employee`                       | 查找 Bean 名称包含 `Employee` (忽略大小写) | `phoneEmployeeLoginService` |
-| **未匹配 / 为空**                | **Fallback 机制**                          | 列表中的**第一个** Bean     |
+📖 **了解更多配置信息**：[点击查看配置指南](docs/configuration/CONFIGURATION_GUIDE.md)
 
 ---
 
-## 5. 配置属性速查表
-
-| 配置层级   | 属性名                            | 说明                     | 默认值                    |
-| :--------- | :-------------------------------- | :----------------------- | :------------------------ |
-| **Global** | `parameter-extractor-bean-name`   | 全局参数提取 Bean        | formParameterExtractor    |
-| **Global** | `client-type-extractor-bean-name` | 全局客户端类型提取 Bean  | headerClientTypeExtractor |
-| **Global** | `request-client-header`           | 默认客户端识别 Header    | request-client            |
-| **Global** | `handler.success`                 | 全局成功处理器 Bean      | defaultSuccessHandler     |
-| **Global** | `handler.failure`                 | 全局失败处理器 Bean      | defaultFailureHandler     |
-| **Method** | `process-url`                     | 登录接口路径             | /login/{methodName}       |
-| **Method** | `provider-bean-name`              | 业务逻辑 Bean (支持列表) | **必填**                  |
-| **Method** | `parameter-extractor-bean-name`   | **覆盖**全局参数提取器   | 继承 Global               |
-| **Method** | `client-type-extractor-bean-name` | **覆盖**全局客户端提取器 | 继承 Global               |
-
----
-
-## 6. IDE 智能提示支持
+## 4. IDE 智能提示支持
 
 本项目已配置 Spring Boot Configuration Processor，为 IDE 提供完整的配置智能提示：
 
-### 6.1 支持的功能
+### 4.1 支持的功能
 
 - **代码自动补全**：在 `application.yml` 或 `application.properties` 中输入 `multi-login.` 时，IDE 会自动显示所有可用的配置项
 - **文档提示**：鼠标悬停在配置项上会显示详细的 Javadoc 描述
 - **类型检查**：IDE 会检查配置项的类型是否正确
 - **默认值提示**：显示每个配置项的默认值
 
-### 6.2 支持的 IDE
+### 4.2 支持的 IDE
 
 - **IntelliJ IDEA**：原生支持，无需额外配置
 - **VS Code**：安装 Spring Boot Extension Pack 后支持
 - **Eclipse**：安装 Spring Tools 插件后支持
-
-### 6.3 配置示例
-
-```yaml
-multi-login:
-  enabled: true
-  global:
-    request-client-header: X-Client-Type
-    client-types:
-      - CUSTOMER
-      - EMPLOYEE
-    handler:
-      success: mySuccessHandler
-      failure: myFailureHandler
-    parameter-extractor-bean-name: jsonParameterExtractor
-    client-type-extractor-bean-name: headerClientTypeExtractor
-  methods:
-    phone:
-      process-url: /login/phone
-      http-method: POST
-      principal-param-name:
-        - phone
-      credential-param-name:
-        - code
-      provider-bean-name:
-        - customerPhoneProvider
-        - employeePhoneProvider
-```
-
-📖 **了解更多配置元数据信息**：[点击查看配置元数据说明](docs/upgrade/CONFIGURATION_METADATA.md)
-
-
-
 
 ---
 
@@ -378,9 +270,8 @@ docs/
 │   └── CONFIGURATION_GUIDE.md # 完整配置说明、使用示例、最佳实践
 ├── guides/                   # 使用指南
 │   └── INDEX.md             # 文档分类和快速导航
-└── upgrade/                  # 升级与迁移文档（保持不变）
-    ├── AUTO_CONFIGURATION_GUIDE.md
-    └── CONFIGURATION_METADATA.md
+└── upgrade/                  # 升级与迁移文档（该小/大版本的升级与迁移指南）
+    └── LOGGING_I18N_UPGRADE_GUIDE.md
 ```
 
 ### 文档使用建议
@@ -388,7 +279,7 @@ docs/
 1. **新用户**：从 [配置指南](docs/configuration/CONFIGURATION_GUIDE.md) 开始，了解基本配置和使用方法
 2. **架构师/开发者**：阅读 [架构设计文档](docs/architecture/DESIGN_DOC.md) 理解设计原理
 3. **问题排查**：参考 [使用指南索引](docs/guides/INDEX.md) 快速找到相关文档
-4. **版本升级**：查看 [升级指南](docs/upgrade/AUTO_CONFIGURATION_GUIDE.md) 了解新特性
+4. **版本升级**：查看 [变更日志](CHANGELOG.md) 了解版本变更，或参考 [日志与国际化升级指南](docs/upgrade/LOGGING_I18N_UPGRADE_GUIDE.md)
 
 ### 核心架构映射
 

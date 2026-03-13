@@ -105,3 +105,4 @@ my.custom.error.code=我的自定义错误消息: {0}, {1}
 
 - [配置指南](../configuration/CONFIGURATION_GUIDE.md)
 - [核心架构映射](../architecture/CORE_ARCHITECTURE_MAPPING.md)
+- [变更日志](../../CHANGELOG.md)

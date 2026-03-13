@@ -10,8 +10,8 @@
 - [配置指南](../configuration/CONFIGURATION_GUIDE.md) - 完整配置说明、使用示例、最佳实践
 
 ### 升级与迁移
-- [自动配置指南](../upgrade/AUTO_CONFIGURATION_GUIDE.md) - 自动配置使用指南
-- [配置元数据](../upgrade/CONFIGURATION_METADATA.md) - IDE 智能提示配置说明
+- [日志与国际化升级指南](../upgrade/LOGGING_I18N_UPGRADE_GUIDE.md) - v0.0.7 日志规范与国际化支持改造
+- [变更日志](../../CHANGELOG.md) - 完整的版本变更记录
 
 ## 快速导航
 
@@ -58,15 +58,27 @@
 
 ## 版本信息
 
-### 当前版本：v0.0.6
+### 当前版本：v0.0.7
+- 支持国际化错误消息（中文、英文、繁体中文）
+- 统一日志规范，所有核心类使用 `@Slf4j`
+- 增强异常处理，支持错误码和上下文信息
+- 新增 `MessageSourceHelper` 工具类
+- 完全向后兼容 v0.0.6
+
+### 历史版本
+
+#### v0.0.6
 - 支持自动配置
 - 支持 DSL 风格配置
 - 支持 IDE 智能提示
 - 完整的扩展点支持
 
+#### v0.0.5
+- 初始发布核心功能
+
 ### 升级指南
-- 从旧版本升级请参考 [自动配置指南](../upgrade/AUTO_CONFIGURATION_GUIDE.md)
-- 配置元数据说明请参考 [配置元数据](../upgrade/CONFIGURATION_METADATA.md)
+- 从 v0.0.6 升级到 v0.0.7 请参考 [日志与国际化升级指南](../upgrade/LOGGING_I18N_UPGRADE_GUIDE.md)
+- 完整变更记录请参考 [CHANGELOG](../../CHANGELOG.md)
 
 ## 贡献指南
 
