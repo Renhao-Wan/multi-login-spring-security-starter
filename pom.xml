@@ -44,7 +44,7 @@
     </scm>
 
     <properties>
-        <multi-login.version>0.0.6</multi-login.version>
+        <multi-login.version>0.0.7</multi-login.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
