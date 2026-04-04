@@ -25,6 +25,11 @@
 
 - [日志与国际化升级指南](docs/upgrade/LOGGING_I18N_UPGRADE_GUIDE.md) - v0.0.7 日志规范与国际化支持改造
 
+## [0.0.8] - 2026-04-04
+
+### ✨ New Features
+- 替换开源协议为 Apache 2.0，新增 LICENSE、LICENSE-CN.md、NOTICE 文件
+
 ## [0.0.7] - 2026-03-12
 
 ### Added

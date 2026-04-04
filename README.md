@@ -1,6 +1,6 @@
 # multi-login-spring-security-starter
 
-![](https://img.shields.io/maven-central/v/io.github.renhao-wan/multi-login-spring-security-starter) [![Java CI with Maven](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/maven.yml) ![Java](https://img.shields.io/badge/Java-17+-blue.svg) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![](https://img.shields.io/maven-central/v/io.github.renhao-wan/multi-login-spring-security-starter) [![Java CI with Maven](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/maven.yml) ![Java](https://img.shields.io/badge/Java-17+-blue.svg) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
 ## 📚 文档导航
 
@@ -20,14 +20,9 @@
 
 `multi-login-spring-security-starter` 是一个**配置驱动**的 Spring Security 扩展包。它旨在解决原生 Security 处理 **多方式登录**（如手机验证码、邮箱密码）和 **多客户端认证**（如 C端用户、B端员工）时代码冗余的问题。
 
-## 🚀 新特性：国际化支持 (v0.0.7)
+## 🚀 新特性：Apache 2.0 协议 (v0.0.8)
 
-从 v0.0.7 开始，我们引入了国际化支持，提升框架的企业级适用性：
-
-- **多语言错误消息**：支持中文、英文、繁体中文等多种语言
-- **统一日志规范**：所有核心类统一使用 `@Slf4j` 注解
-- **增强异常处理**：`MultiLoginException` 支持错误码和上下文信息
-- **向后兼容**：完全兼容 v0.0.6，无需修改现有代码
+从 v0.0.8 开始，项目正式采用 Apache 2.0 开源协议，新增 `LICENSE`、`LICENSE-CN.md`、`NOTICE` 文件。
 
 📖 **查看详细指南**：[点击查看日志与国际化升级指南](docs/upgrade/LOGGING_I18N_UPGRADE_GUIDE.md)
 
@@ -41,7 +36,7 @@
 <dependency>
     <groupId>io.github.renhao-wan</groupId>
     <artifactId>multi-login-spring-security-starter</artifactId>
-    <version>0.0.7</version>
+    <version>0.0.8</version>
 </dependency>
 ```
 
