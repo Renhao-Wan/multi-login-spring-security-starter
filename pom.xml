@@ -6,7 +6,7 @@
 
     <groupId>io.github.renhao-wan</groupId>
     <artifactId>multi-login-spring-security-parent</artifactId>
-    <version>0.0.8</version>
+    <version>0.0.9</version>
     <packaging>pom</packaging>
     <modules>
         <module>multi-login-spring-security-core</module>
@@ -44,7 +44,7 @@
     </scm>
 
     <properties>
-        <multi-login.version>0.0.8</multi-login.version>
+        <multi-login.version>0.0.9</multi-login.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

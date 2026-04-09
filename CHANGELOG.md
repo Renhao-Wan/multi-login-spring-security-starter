@@ -25,6 +25,28 @@
 
 - [日志与国际化升级指南](docs/upgrade/LOGGING_I18N_UPGRADE_GUIDE.md) - v0.0.7 日志规范与国际化支持改造
 
+## [0.0.9] - 2026-04-09
+
+### ✨ New Features
+- 重命名 CI 配置文件从 maven.yml 为 ci.yml，增强 CI 配置
+- 添加代码覆盖率上传功能，支持多模块覆盖率报告上传到 Codecov
+- 为所有核心模块添加全面的单元测试，提升代码质量和测试覆盖率
+
+### 🔧 Improvements
+- 优化 LICENSE 文件文本，提高清晰度和一致性
+- 更新 README 中的徽章链接，确保指向正确的分支
+- 增强 CI 配置，支持 Java 17 和 21 多版本测试
+
+### 🧪 Testing
+- 为 BaseMultiLoginToken 添加完整的单元测试
+- 为 DynamicAuthenticationFilter 添加全面的测试用例
+- 为 RouterAuthenticationProvider 添加异常处理和认证测试
+- 为 MultiLoginException 添加本地化消息和上下文测试
+- 为 MultiLoginProperties 添加配置验证和默认值测试
+- 为参数提取器（FormParameterExtractor、HeaderClientTypeExtractor、JsonParameterExtractor）添加测试
+- 为认证处理器（DefaultFailureHandler、DefaultSuccessHandler）添加测试
+- 为自动配置模块添加配置类测试
+
 ## [0.0.8] - 2026-04-04
 
 ### ✨ New Features

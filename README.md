@@ -20,11 +20,16 @@
 
 `multi-login-spring-security-starter` 是一个**配置驱动**的 Spring Security 扩展包。它旨在解决原生 Security 处理 **多方式登录**（如手机验证码、邮箱密码）和 **多客户端认证**（如 C端用户、B端员工）时代码冗余的问题。
 
-## 🚀 新特性：Apache 2.0 协议 (v0.0.8)
+## 🚀 新特性：全面测试覆盖与 CI/CD 增强 (v0.0.9)
 
-从 v0.0.8 开始，项目正式采用 Apache 2.0 开源协议，新增 `LICENSE`、`LICENSE-CN.md`、`NOTICE` 文件。
+从 v0.0.9 开始，项目实现了全面的单元测试覆盖，并增强了 CI/CD 配置：
 
-📖 **查看详细指南**：[点击查看日志与国际化升级指南](docs/upgrade/LOGGING_I18N_UPGRADE_GUIDE.md)
+- ✅ **全面单元测试**：为所有核心模块添加了完整的单元测试，提升代码质量
+- ✅ **CI/CD 现代化**：重命名 CI 配置文件，增强配置，支持多版本 Java 测试
+- ✅ **代码覆盖率**：集成 Codecov，自动上传多模块覆盖率报告
+- ✅ **配置优化**：优化 LICENSE 文本，修复徽章链接，提升文档质量
+
+📖 **查看详细变更**：[点击查看完整变更日志](CHANGELOG.md)
 
 ---
 
@@ -36,7 +41,7 @@
 <dependency>
     <groupId>io.github.renhao-wan</groupId>
     <artifactId>multi-login-spring-security-starter</artifactId>
-    <version>0.0.8</version>
+    <version>0.0.9</version>
 </dependency>
 ```
 
