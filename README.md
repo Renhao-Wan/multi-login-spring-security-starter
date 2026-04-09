@@ -1,6 +1,6 @@
 # multi-login-spring-security-starter
 
-![](https://img.shields.io/maven-central/v/io.github.renhao-wan/multi-login-spring-security-starter) [![Java CI](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/maven.yml) ![Codecov](https://codecov.io/github/Renhao-Wan/multi-login-spring-security-starter/branch/main/graph/badge.svg) ![Java](https://img.shields.io/badge/Java-17+-blue.svg) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
+![](https://img.shields.io/maven-central/v/io.github.renhao-wan/multi-login-spring-security-starter) [![Java CI](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/xiao-wan-520/multi-login-spring-security-starter/actions/workflows/ci.yml) ![Codecov](https://codecov.io/github/Renhao-Wan/multi-login-spring-security-starter/branch/main/graph/badge.svg) ![Java](https://img.shields.io/badge/Java-17+-blue.svg) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
 ## 📚 文档导航
 
