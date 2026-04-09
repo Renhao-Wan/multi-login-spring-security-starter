@@ -1,4 +1,4 @@
-name: Java CI with Maven
+name: Java CI
 
 on:
   push:
@@ -25,4 +25,12 @@ jobs:
           cache: 'maven'
 
       - name: Build and Test with Java ${{ matrix.java-version }}
-        run: mvn -B test --file pom.xml
+        run: mvn -B clean test --file pom.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./target/site/jacoco/jacoco.xml
+          fail_ci_if_error: true
+          verbose: true
